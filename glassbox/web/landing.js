@@ -1,41 +1,28 @@
 (() => {
-  const el = document.getElementById('landing');
-  if (!el) return;
+    const spooky = document.getElementById('landing-spooky');
+    spooky?.addEventListener('change', () => {
+        document.body.classList.toggle('spooky-mode', spooky.checked);
+    });
 
-  // After the first launch in this tab, skip the intro on refresh.
-  let seen = false;
-  try { seen = sessionStorage.getItem('gt-intro-seen') === '1'; } catch (e) {}
-  if (seen) { el.remove(); return; }
+    const copyButton = document.getElementById('copy-command');
+    copyButton?.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard?.writeText(document.getElementById('pip-command').textContent);
+        } catch (_) {}
+        copyButton.textContent = 'Copied';
+        setTimeout(() => { copyButton.textContent = 'Copy'; }, 1600);
+    });
 
-  // Decorative causal-attention grid (purely visual, not real data)
-  const grid = document.getElementById('lp-grid');
-  const N = 14, palette = ['#25143c', '#53348a', '#9a69cf', '#54bc91', '#b5f3c8'];
-  let seed = 7;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      const d = document.createElement('div');
-      d.className = 'lp-cell';
-      if (c > r) {
-        d.style.visibility = 'hidden';
-      } else {
-        let v = Math.min(1, 0.15 * rnd() + Math.exp(-(r - c) / 2.5) * (0.4 + 0.6 * rnd()));
-        if (c === 0) v = 0.02;   // dark first column, like the attention sink
-        d.style.background = palette[Math.min(4, Math.floor(v * 5))];
-        d.style.animationDelay = (r * 40 + c * 8) + 'ms';
-      }
-      grid.appendChild(d);
+    document.querySelectorAll('.mock-heatmap .heatmap-grid').forEach(grid => {
+        for (let i = 0; i < 80; i++) grid.appendChild(document.createElement('i'));
+    });
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => entry.target.classList.toggle('is-visible', entry.isIntersecting));
+        }, { threshold: 0.45 });
+        document.querySelectorAll('.scroll-card').forEach(card => observer.observe(card));
+    } else {
+        document.querySelectorAll('.scroll-card').forEach(card => card.classList.add('is-visible'));
     }
-  }
-
-  function onKey(e) { if (e.key === 'Enter') launch(); }
-  function launch() {
-    try { sessionStorage.setItem('gt-intro-seen', '1'); } catch (e) {}
-    document.removeEventListener('keydown', onKey);
-    el.classList.add('lp-hide');
-    setTimeout(() => { el.remove(); window.dispatchEvent(new Event('resize')); }, 500);
-  }
-  document.getElementById('lp-launch').addEventListener('click', launch);
-  document.addEventListener('keydown', onKey);
-  document.getElementById('lp-launch').focus();
 })();

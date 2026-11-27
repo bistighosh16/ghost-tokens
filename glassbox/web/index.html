@@ -15,6 +15,7 @@
             <span class="brand-mark">◇</span>
             <span class="brand-text">Ghost Tokens</span>
             <span class="brand-sub">confidence, made visible</span>
+            <a class="brand-demo" href="/" title="Open the Ghost Tokens landing page">How to use</a>
             <a class="brand-demo" href="/static/demo.html" title="Replays a saved example without running the model.">static demo</a>
         </div>
         <div class="status">
@@ -38,7 +39,7 @@
                 <button id="back-to-original" class="btn-quiet" type="button">back to original</button>
             </div>
             <div id="token-stream" class="token-stream" aria-label="Generated answer tokens"></div>
-            <div id="empty-hint" class="empty-hint" hidden>Pick a prompt and press generate. Your tokens and confidence trail will appear here.</div>
+            <div id="empty-hint" class="empty-hint" hidden><span class="empty-mascot" aria-hidden="true">👻</span><span>Pick a prompt to summon some ghosts</span></div>
             <div class="answer-toolbar">
                 <div class="stream-legend">
                     <span class="legend-solid">Plain word</span> = no ghost signal · <span class="legend-ghost">wavy green word</span> = high entropy and low raw confidence · whitespace and punctuation are ignored.
@@ -46,12 +47,20 @@
                 </div>
                 <span id="haunt-badge" class="badge-haunt" data-level="idle">haunt: —</span>
             </div>
-            <div class="ghost-sensitivity">
-                <label for="ghost-threshold">ghost sensitivity <span id="ghost-threshold-value">50%</span></label>
-                <div class="sensitivity-endpoints"><span>fewer ghosts</span><span>more ghosts</span></div>
-                <input type="range" id="ghost-threshold" min="0" max="100" step="1" value="50">
-                <div id="ghost-rule" class="ghost-rule">Ghost rule: H ≥ 4.5 bits AND raw P &lt; 15.0%.</div>
+            <div class="sensitivity-haunt-row">
+                <div class="ghost-sensitivity">
+                    <label for="ghost-threshold">ghost sensitivity <span id="ghost-threshold-value">50%</span></label>
+                    <div class="sensitivity-endpoints"><span>fewer ghosts</span><span>more ghosts</span></div>
+                    <input type="range" id="ghost-threshold" min="0" max="100" step="1" value="50">
+                    <div id="ghost-rule" class="ghost-rule">Ghost rule: H ≥ 4.5 bits AND raw P &lt; 15.0%.</div>
+                </div>
+                <div class="haunt-meter" aria-label="Haunt level">
+                    <div class="haunt-meter-label"><span>Haunt level</span><b id="haunt-tier">Calm</b></div>
+                    <div class="haunt-meter-track"><i id="haunt-meter-fill"></i></div>
+                    <span id="haunt-meter-value">—</span>
+                </div>
             </div>
+            <div class="answer-insights">
             <div class="selected-word">
                 <div class="selected-word-header">
                     <span>selected word <span id="step-indicator" class="hint-inline">—</span></span>
@@ -68,6 +77,7 @@
                 <div id="selected-alternatives" class="selected-alternatives">Select a word to inspect alternatives.</div>
             </div>
             <canvas id="confidence-trail" class="confidence-trail" aria-label="Confidence trail chart in bits. Click a point to inspect that token."></canvas>
+            </div>
             <div class="replay-controls">
                 <button id="replay-play" class="btn-quiet" type="button">play séance</button>
                 <button id="replay-step" class="btn-quiet" type="button">step</button>
@@ -140,7 +150,7 @@
                     <span id="attn-step-label" class="caption-text">Select an answer token to inspect its attention.</span>
                 </div>
                 <p class="underhood-explanation">Each row is a word the model just wrote; columns are the earlier words it looked at.</p>
-                <p class="attn-note">Token 0 is excluded from the heatmap when “hide token 0” is enabled.</p>
+                <p class="attn-note">Token 0 can be hidden with the hatched column.</p>
                 <div class="attn-controls">
                     <label class="toggle">
                         <input type="checkbox" id="attn-avg-heads" checked>

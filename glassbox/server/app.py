@@ -57,6 +57,8 @@ async def ws_generate(ws: WebSocket):
         top_p = float(params.get("top_p", 0.9))
         use_cache = bool(params.get("use_cache", True))
         trace = bool(params.get("trace", True))
+        seed = int(params.get("seed", 1337))
+        np.random.seed(seed)
 
         model = STATE["model"]
         tok = STATE["tokenizer"]
@@ -125,6 +127,10 @@ WEB_DIR = Path(__file__).parent.parent / "web"
 
 @app.get("/")
 async def root():
+    return FileResponse(WEB_DIR / "landing.html")
+
+@app.get("/dashboard")
+async def dashboard():
     return FileResponse(WEB_DIR / "index.html")
 
 # Mount everything else as static

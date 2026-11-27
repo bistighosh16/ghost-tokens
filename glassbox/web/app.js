@@ -101,20 +101,33 @@
 
     function updateHauntBadge() {
         if (!steps.length) {
-            hauntBadge.textContent = 'haunt: —';
+            hauntBadge.textContent = '';
             hauntBadge.dataset.level = 'idle';
+            const fill = document.getElementById('haunt-meter-fill');
+            if (fill) fill.style.width = '0%';
+            const value = document.getElementById('haunt-meter-value');
+            if (value) value.textContent = '—';
+            const tier = document.getElementById('haunt-tier');
+            if (tier) tier.textContent = 'Calm';
             return;
         }
         const countable = steps.filter(step => GhostSignals.isCountableToken(step.token_str));
         if (!countable.length) {
-            hauntBadge.textContent = 'haunt: — · 0 content tokens';
+            hauntBadge.textContent = '';
             hauntBadge.dataset.level = 'idle';
             return;
         }
         const ghostCount = countable.filter(isGhost).length;
         const percent = hauntPercent(steps);
-        hauntBadge.textContent = `haunt: ${percent}% · ${ghostCount}/${countable.length} content tokens`;
+        hauntBadge.textContent = '';
         hauntBadge.dataset.level = percent < 30 ? 'low' : percent < 60 ? 'medium' : 'high';
+        const tier = percent < 30 ? 'Calm' : percent < 60 ? 'Restless' : 'Haunted';
+        const fill = document.getElementById('haunt-meter-fill');
+        if (fill) fill.style.width = `${percent}%`;
+        const value = document.getElementById('haunt-meter-value');
+        if (value) value.textContent = `${percent}% · ${ghostCount} of ${countable.length} words`;
+        const tierNode = document.getElementById('haunt-tier');
+        if (tierNode) tierNode.textContent = tier;
     }
 
     function getAlternatives(step, limit = 5) {
@@ -459,6 +472,7 @@
                 top_p: parseFloat(document.getElementById('topp-slider').value),
                 use_cache: useCacheInput.checked,
                 trace: true,
+                seed: 1337,
             }));
         };
 
@@ -689,7 +703,7 @@
     }
 
     async function loadDemoTrace() {
-        const response = await fetch('/static/demo-trace.json');
+        const response = await fetch('/static/demo-trace.json?v=2');
         if (!response.ok) throw new Error(`Could not load saved example (${response.status}).`);
         const trace = await response.json();
         if (trace.version !== 1 || !trace.examples || !trace.examples[trace.default]) {

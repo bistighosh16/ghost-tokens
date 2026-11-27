@@ -13,7 +13,7 @@ const Heatmap = (() => {
     let resizeFrame = null;
 
     function viridis(t) {
-        const stops = [[41, 18, 63], [103, 58, 183], [176, 86, 200], [242, 123, 66], [255, 200, 87]];
+        const stops = [[49, 54, 149], [69, 117, 180], [116, 173, 209], [171, 221, 164], [255, 255, 191]];
         t = Math.max(0, Math.min(1, t));
         const idx = t * (stops.length - 1);
         const i0 = Math.floor(idx), i1 = Math.min(i0 + 1, stops.length - 1);
