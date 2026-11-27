@@ -3,133 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlassBox 🔮 — See Inside the Model</title>
+    <title>Ghost Tokens 👻 — Confidence, made visible</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="landing" role="dialog" aria-label="GlassBox introduction">
-  <div class="lp-inner">
-    <div class="lp-kicker">OPEN-SOURCE AI · BUILT FROM SCRATCH</div>
-    <h1 class="lp-title">GlassBox</h1>
-    <p class="lp-tag">See inside the model.</p>
-    <p class="lp-pitch">A small language model rebuilt in pure NumPy. Watch it read, attend and decide, one token at a time.</p>
-    <div id="lp-grid" aria-hidden="true"></div>
-    <p class="lp-note">illustrative attention pattern</p>
-    <div class="lp-stats">
-      <div class="lp-card"><b>134.5M</b><span>parameters, 30 layers</span></div>
-      <div class="lp-card"><b>30 / 30</b><span>layers match PyTorch</span></div>
-      <div class="lp-card"><b>8.4e-5</b><span>max logit diff vs PyTorch</span></div>
-      <div class="lp-card"><b>25 / 25</b><span>greedy tokens identical</span></div>
-    </div>
-    <button id="lp-launch" class="lp-btn">Launch GlassBox →</button>
-    <p class="lp-foot">SmolLM2-135M · pure NumPy, no PyTorch at runtime · numbers from my test suite on a few prompts · made by Vivi</p>
-  </div>
-</div>
     <header class="topbar">
         <div class="brand">
             <span class="brand-mark">◇</span>
-            <span class="brand-text">GlassBox</span>
-            <span class="brand-sub">see inside the model</span>
+            <span class="brand-text">Ghost Tokens</span>
+            <span class="brand-sub">confidence, made visible</span>
+            <a class="brand-demo" href="/" title="Open the Ghost Tokens landing page">How to use</a>
+            <a class="brand-demo" href="/static/demo.html" title="Replays a saved example without running the model.">static demo</a>
         </div>
         <div class="status">
             <span id="status-dot" class="dot dot-idle"></span>
             <span id="status-text">idle</span>
+            <label class="toggle spooky-toggle" title="Toggle atmospheric colors and fog">
+                <input type="checkbox" id="spooky-mode" checked>
+                <span>spooky mode</span>
+            </label>
         </div>
     </header>
 
     <main class="grid">
-        <!-- LEFT: Prompt + Token Stream -->
+        <section class="panel panel-center answer-panel">
+            <div class="panel-header flex-between">
+                <span>your answer</span>
+                <span id="trace-source-label" class="caption-text">Saved example · generate to try your own prompt.</span>
+            </div>
+            <div id="branch-banner" class="branch-banner" hidden>
+                <span id="branch-label"></span>
+                <button id="back-to-original" class="btn-quiet" type="button">back to original</button>
+            </div>
+            <div id="token-stream" class="token-stream" aria-label="Generated answer tokens"></div>
+            <div id="empty-hint" class="empty-hint" hidden><span class="empty-mascot" aria-hidden="true">👻</span><span>Pick a prompt to summon some ghosts</span></div>
+            <div class="answer-toolbar">
+                <div class="stream-legend">
+                    <span class="legend-solid">Plain word</span> = no ghost signal · <span class="legend-ghost">wavy green word</span> = high entropy and low raw confidence · whitespace and punctuation are ignored.
+                    <span class="ghost-caveat">A ghost means the model had several plausible choices here, which is a signal to double-check, not proof of an error.</span>
+                </div>
+                <span id="haunt-badge" class="badge-haunt" data-level="idle">haunt: —</span>
+            </div>
+            <div class="sensitivity-haunt-row">
+                <div class="ghost-sensitivity">
+                    <label for="ghost-threshold">ghost sensitivity <span id="ghost-threshold-value">50%</span></label>
+                    <div class="sensitivity-endpoints"><span>fewer ghosts</span><span>more ghosts</span></div>
+                    <input type="range" id="ghost-threshold" min="0" max="100" step="1" value="50">
+                    <div id="ghost-rule" class="ghost-rule">Ghost rule: H ≥ 4.5 bits AND raw P &lt; 15.0%.</div>
+                </div>
+                <div class="haunt-meter" aria-label="Haunt level">
+                    <div class="haunt-meter-label"><span>Haunt level</span><b id="haunt-tier">Calm</b></div>
+                    <div class="haunt-meter-track"><i id="haunt-meter-fill"></i></div>
+                    <span id="haunt-meter-value">—</span>
+                </div>
+            </div>
+            <div class="answer-insights">
+            <div class="selected-word">
+                <div class="selected-word-header">
+                    <span>selected word <span id="step-indicator" class="hint-inline">—</span></span>
+                    <span id="selected-token" class="selected-token">Select a word</span>
+                </div>
+                <label class="sr-only" for="step-slider">selected answer step</label>
+                <input type="range" id="step-slider" min="0" max="0" value="0">
+                <div class="selected-metrics">
+                    <div class="selected-metric"><span>raw confidence</span><b id="selected-confidence">—</b></div>
+                    <div class="selected-metric"><span>entropy</span><b id="selected-entropy">—</b></div>
+                    <div class="selected-metric"><span>top-two margin</span><b id="selected-margin">—</b></div>
+                </div>
+                <div class="alternatives-heading">top alternatives <span>(normalized within top 200 · ␠ = space · ↵ = newline)</span></div>
+                <div id="selected-alternatives" class="selected-alternatives">Select a word to inspect alternatives.</div>
+            </div>
+            <canvas id="confidence-trail" class="confidence-trail" aria-label="Confidence trail chart in bits. Click a point to inspect that token."></canvas>
+            </div>
+            <div class="replay-controls">
+                <button id="replay-play" class="btn-quiet" type="button">play séance</button>
+                <button id="replay-step" class="btn-quiet" type="button">step</button>
+                <button id="replay-stop" class="btn-quiet" type="button">stop</button>
+                <span id="replay-alternatives" class="replay-alternatives" hidden></span>
+            </div>
+            <div class="metrics-row">
+                <div class="metric"><span class="metric-label">tok/s</span><span id="metric-speed" class="metric-value">—</span></div>
+                <div class="metric"><span class="metric-label">content tokens</span><span id="metric-count" class="metric-value">—</span></div>
+                <div class="metric"><span class="metric-label">cache</span><span id="metric-cache" class="metric-value">—</span></div>
+            </div>
+        </section>
+
         <section class="panel panel-left">
             <div class="panel-header">prompt</div>
-            <textarea id="prompt" class="prompt-input" rows="2">Paris is in France. Rome is in</textarea>
-            
+            <textarea id="prompt" class="prompt-input" rows="2">The capital of France is</textarea>
+            <div class="prompt-presets" aria-label="Demo prompts">
+                <button class="btn-quiet" type="button" data-demo-example="easy">easy fact</button>
+                <button class="btn-quiet" type="button" data-demo-example="obscure">obscure fact</button>
+            </div>
             <div class="controls-row">
-                <label>max tokens
-                    <input type="number" id="max-tokens" value="25" min="1" max="100">
+                <label>max answer tokens
+                    <input type="number" id="max-tokens" value="8" min="1" max="100">
                 </label>
                 <label class="toggle">
                     <input type="checkbox" id="use-cache" checked>
                     <span>KV cache</span>
                 </label>
             </div>
-            
             <button id="generate-btn" class="btn-primary">generate</button>
-            <div id="branch-banner" class="branch-banner" hidden>
-                <span id="branch-label"></span>
-                <button id="back-to-original" class="btn-quiet" type="button">back to original</button>
-            </div>
-            
-            <div class="panel-header mt-sm">token stream <span class="hint-inline">(click token to jump)</span></div>
-            <div id="token-stream" class="token-stream"></div>
-            <div class="stream-legend">chip color = how surprised the model was by its own pick.</div>
-
-            <div class="metrics-row">
-                <div class="metric"><span class="metric-label">tok/s</span><span id="metric-speed" class="metric-value">—</span></div>
-                <div class="metric"><span class="metric-label">tokens</span><span id="metric-count" class="metric-value">—</span></div>
-                <div class="metric"><span class="metric-label">cache</span><span id="metric-cache" class="metric-value">—</span></div>
-            </div>
+            <p class="prompt-hint">A saved example is already loaded. Generate runs the selected prompt with the local model.</p>
         </section>
 
-        <!-- CENTER: Attention Heatmap -->
-        <section class="panel panel-center">
-            <div class="panel-header flex-between">
-                <span>attention matrix</span>
-                <span class="caption-text">attention-weighted view: where it looked, not proof of why it answered.</span>
-            </div>
-            
-            <div class="attn-controls">
-                <label>layer
-                    <select id="attn-layer"></select>
-                </label>
-                <label>head
-                    <select id="attn-head"></select>
-                </label>
-                <label class="toggle">
-                    <input type="checkbox" id="attn-avg-heads">
-                    <span>avg heads</span>
-                </label>
-                <label class="toggle">
-                    <input type="checkbox" id="attn-row-norm" checked>
-                    <span>row norm</span>
-                </label>
-                <label class="toggle">
-                    <input type="checkbox" id="attn-hide-sink" checked>
-                    <span>hide token 0 (sink)</span>
-                </label>
-                <button id="head-gallery-open" class="btn-quiet" type="button">head gallery</button>
-            </div>
-
-            <div class="canvas-wrapper">
-                <canvas id="attn-canvas"></canvas>
-            </div>
-            
-            <div class="colorbar">
-                <span>low attention</span>
-                <div class="colorbar-gradient"></div>
-                <span>high attention</span>
-            </div>
-            <div id="attn-info" class="attn-info">hover a cell to inspect attention weight</div>
-        </section>
-
-        <!-- RIGHT: Probability Bars + Sliders -->
         <section class="panel panel-right">
-            <div class="panel-header flex-between">
-                <span>next-token probabilities</span>
-                <span id="entropy-badge" class="badge-entropy" title="Full-vocabulary model uncertainty at the selected step">model uncertainty: —</span>
-            </div>
-            
-            <div class="step-selector">
-                <label>step
-                    <input type="range" id="step-slider" min="0" max="0" value="0">
-                </label>
-                <span id="step-indicator">0 / 0</span>
-            </div>
-
+            <div class="panel-header">next-token probabilities · after sampling</div>
             <svg id="prob-bars" width="100%" height="230"></svg>
-            
+            <div class="probability-legend"><span aria-hidden="true">┄ ┄ ┄</span> Dashed line = candidates cut off by top-p or top-k.</div>
+            <div id="probability-note" class="hint">Bars show temperature-scaled probabilities within the top 200. Raw full-vocabulary confidence is shown in selected-word details and chip tooltips.</div>
             <div class="panel-header mt-xs">sampling controls</div>
             <div class="slider-group">
                 <label>temperature <span id="temp-val">0.70</span>
@@ -142,28 +128,71 @@
                     <input type="range" id="topk-slider" min="1" max="100" step="1" value="40">
                 </label>
             </div>
-            <p class="hint">sliders apply on the next generate · bars preview the reshaping · percentages among top 200</p>
-            <div class="model-card">
-    <div class="panel-header">model</div>
-    <div class="mc-grid">
-        <span>name</span><b>SmolLM2-135M</b>
-        <span>parameters</span><b>134.5M</b>
-        <span>layers</span><b>30</b>
-        <span>heads</span><b>9 (3 KV)</b>
-        <span>hidden size</span><b>576</b>
-        <span>vocabulary</span><b>49,152</b>
-    </div>
-</div>
+            <p class="hint">Sampling settings apply to the next answer.</p>
+            <details class="model-details">
+                <summary>About the model</summary>
+                <div class="mc-grid">
+                    <span>name</span><b>SmolLM2-135M</b>
+                    <span>parameters</span><b>134.5M</b>
+                    <span>layers</span><b>30</b>
+                    <span>heads</span><b>9 (3 KV)</b>
+                    <span>hidden size</span><b>576</b>
+                    <span>vocabulary</span><b>49,152</b>
+                </div>
+            </details>
         </section>
 
-        <!-- BOTTOM: Logit Lens Strip -->
-        <section class="panel panel-bottom">
-            <div class="panel-header flex-between">
-                <span>logit lens — predictions layer by layer</span>
-                <span id="lens-legend" class="caption-text">B = after transformer block · gold = earliest stable top-1</span>
+        <details class="panel panel-underhood">
+            <summary>Under the hood · attention matrix and logit lens</summary>
+            <div class="underhood-content">
+                <div class="panel-header flex-between">
+                    <span>attention matrix</span>
+                    <span id="attn-step-label" class="caption-text">Select an answer token to inspect its attention.</span>
+                </div>
+                <p class="underhood-explanation">Each row is a word the model just wrote; columns are the earlier words it looked at.</p>
+                <p class="attn-note">Token 0 can be hidden with the hatched column.</p>
+                <div class="attn-controls">
+                    <label class="toggle">
+                        <input type="checkbox" id="attn-avg-heads" checked>
+                        <span>avg heads</span>
+                    </label>
+                    <details class="attn-advanced">
+                        <summary>Advanced heatmap controls</summary>
+                        <div class="attn-controls">
+                            <label>layer
+                                <select id="attn-layer"></select>
+                            </label>
+                            <label>head
+                                <select id="attn-head"></select>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" id="attn-row-norm" checked>
+                                <span>row norm</span>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" id="attn-hide-sink" checked>
+                                <span>hide token 0</span>
+                            </label>
+                            <button id="head-gallery-open" class="btn-quiet" type="button">head gallery</button>
+                        </div>
+                    </details>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="attn-canvas"></canvas>
+                </div>
+                <div class="colorbar">
+                    <span>low attention</span>
+                    <div class="colorbar-gradient"></div>
+                    <span>high attention</span>
+                </div>
+                <div id="attn-info" class="attn-info">Hover a cell for its selected and earlier tokens.</div>
+                <div class="panel-header mt-sm flex-between">
+                    <span>logit lens — predictions layer by layer</span>
+                </div>
+                <p class="underhood-explanation">The logit lens shows each layer’s top guess for the next token; the target token is selected above.</p>
+                <div id="lens-strip" class="lens-strip"></div>
             </div>
-            <div id="lens-strip" class="lens-strip"></div>
-        </section>
+        </details>
     </main>
 
     <dialog id="head-gallery" class="head-gallery-dialog">
@@ -178,14 +207,14 @@
     </dialog>
 
     <footer class="footer">
-        made with 🔮 by vivi · pure numpy transformer engine · no pytorch runtime
+        Ghost Tokens · Built on GlassBox · pure NumPy · no PyTorch runtime
     </footer>
 
   <script src="/static/util.js"></script>
-<script src="/static/heatmap.js"></script>
-<script src="/static/probs.js"></script>
-<script src="/static/lens.js"></script>
-<script src="/static/app.js"></script>
-<script src="/static/landing.js"></script>
+  <script src="/static/ghost-signals.js"></script>
+  <script src="/static/heatmap.js"></script>
+  <script src="/static/probs.js"></script>
+  <script src="/static/lens.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

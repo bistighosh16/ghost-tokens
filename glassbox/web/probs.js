@@ -86,7 +86,7 @@ const ProbBars = (() => {
         svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
         const labelW = 105;
-        const barAreaW = w - labelW - 50;
+        const barAreaW = w - labelW - 86;
 
         let html = '';
         top12.forEach((item, idx) => {
@@ -96,24 +96,24 @@ const ProbBars = (() => {
             const isSampled = currentSampledId !== null && item.id === currentSampledId;
 
             const opacity = isKept ? (0.4 + 0.6 * (item.p / maxP)) : 0.12;
-            const textColor = isKept ? '#f8fafc' : '#748096';
-            const barColor = isKept ? '#7aa2ff' : '#4a5568';
-            const outline = isSampled ? ' stroke="#fcc419" stroke-width="1.5"' : '';
+            const textColor = isKept ? '#f8fafc' : '#a9b6cc';
+            const barColor = isKept ? '#8c7cff' : '#4a5568';
+            const outline = isSampled ? ' stroke="#b58cff" stroke-width="1.5"' : '';
             const tag = isSampled ? ' ◀ picked' : '';
 
             const isPickable = typeof item.str === 'string' && item.str.length > 0;
             html += `
                 <g${isPickable ? ` data-pick-index="${item.index}" role="button" tabindex="0" aria-label="Force token ${vis(item.displayStr)}"` : ''}>
-                <text x="${labelW - 6}" y="${y + 11}" text-anchor="end" fill="${textColor}" font-family="JetBrains Mono" font-size="10">${vis(item.displayStr)}</text>
+                <text x="${labelW - 6}" y="${y + 11}" text-anchor="end" fill="${textColor}" font-family="JetBrains Mono" font-size="12">${vis(item.displayStr)}</text>
                 <rect x="${labelW}" y="${y}" width="${barW}" height="${barH}" fill="${barColor}" fill-opacity="${opacity}"${outline} rx="2"/>
-                <text x="${labelW + barW + 5}" y="${y + 11}" fill="${isSampled ? '#fcc419' : textColor}" font-family="JetBrains Mono" font-size="9">${(item.p * 100).toFixed(1)}%${tag}</text>
+                <text x="${labelW + barW + 5}" y="${y + 11}" fill="${isSampled ? '#decaff' : textColor}" font-family="JetBrains Mono" font-size="12">${(item.p * 100).toFixed(1)}%${tag}</text>
                 </g>
             `;
 
             // Dashed line marking where top-k / top-p cut the distribution
             if (idx === Math.min(topK, pCutoffIndex) - 1) {
                 const lineY = y + barH + 1;
-                html += `<line x1="0" y1="${lineY}" x2="${w}" y2="${lineY}" stroke="#fcc419" stroke-dasharray="3,3" stroke-width="1"/>`;
+                html += `<line x1="0" y1="${lineY}" x2="${w}" y2="${lineY}" stroke="#b58cff" stroke-dasharray="3,3" stroke-width="1"/>`;
             }
         });
 
@@ -124,9 +124,9 @@ const ProbBars = (() => {
             const isPickable = typeof extra.item.str === 'string' && extra.item.str.length > 0;
             html += `
                 <g${isPickable ? ` data-pick-index="${extra.item.index}" role="button" tabindex="0" aria-label="Force token ${vis(extra.item.displayStr)}"` : ''}>
-                <text x="${labelW - 6}" y="${y + 11}" text-anchor="end" fill="#fcc419" font-family="JetBrains Mono" font-size="10">${vis(extra.item.displayStr)}</text>
-                <rect x="${labelW}" y="${y}" width="${barW}" height="${barH}" fill="#7aa2ff" fill-opacity="0.5" stroke="#fcc419" stroke-width="1.5" rx="2"/>
-                <text x="${labelW + barW + 5}" y="${y + 11}" fill="#fcc419" font-family="JetBrains Mono" font-size="9">${(extra.item.p * 100).toFixed(1)}% ◀ picked (rank ${extra.rank})</text>
+                <text x="${labelW - 6}" y="${y + 11}" text-anchor="end" fill="#decaff" font-family="JetBrains Mono" font-size="12">${vis(extra.item.displayStr)}</text>
+                <rect x="${labelW}" y="${y}" width="${barW}" height="${barH}" fill="#8c7cff" fill-opacity="0.5" stroke="#b58cff" stroke-width="1.5" rx="2"/>
+                <text x="${labelW + barW + 5}" y="${y + 11}" fill="#decaff" font-family="JetBrains Mono" font-size="12">${(extra.item.p * 100).toFixed(1)}% ◀ picked (rank ${extra.rank})</text>
                 </g>
             `;
         }

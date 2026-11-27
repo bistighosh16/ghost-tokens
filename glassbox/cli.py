@@ -1,6 +1,6 @@
 """
-GlassBox CLI — Command line interface.
-Run: glassbox serve
+Ghost Tokens CLI — Command line interface.
+Run: ghost-tokens serve
 Made with 🔮 by Vivi
 """
 import sys
@@ -18,9 +18,9 @@ def serve_command(args):
         sys.path.insert(0, str(root))
         
     print("=" * 60)
-    print(f"  🔮 GlassBox Visualizer Server")
+    print("  Ghost Tokens visualizer")
     print(f"  Serving at: http://{args.host}:{args.port}")
-    print("  Made with 🔮 by Vivi")
+    print("  Built on GlassBox")
     print("=" * 60)
     print()
     
@@ -34,12 +34,12 @@ def serve_command(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="glassbox",
-        description="GlassBox 🔮 — See inside the model",
+        prog="ghost-tokens",
+        description="Ghost Tokens - See where model confidence gets thin",
     )
     subparsers = parser.add_subparsers(dest="command", help="Sub-commands")
     
-    # glassbox serve
+    # ghost-tokens serve
     serve_parser = subparsers.add_parser("serve", help="Start visualizer web server")
     serve_parser.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
     serve_parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")

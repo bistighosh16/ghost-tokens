@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "glassbox-ai"
+name = "ghost-tokens"
 version = "0.1.0"
-description = "A from-scratch LLM inference engine with live mechanistic interpretability visualizer."
+description = "Token-level confidence visualizer built on GlassBox."
 readme = "README.md"
 authors = [{ name = "Vivi", email = "bistighosh16@gmail.com" }]
 license = { text = "MIT" }
@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-glassbox = "glassbox.cli:main"
+ghost-tokens = "glassbox.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

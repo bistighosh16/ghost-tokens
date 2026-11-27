@@ -1,6 +1,6 @@
 """
-GlassBox Server — FastAPI app with WebSocket streaming + static UI mount.
-Run with: glassbox serve (or uvicorn glassbox.server.app:app)
+Ghost Tokens Server — FastAPI app with WebSocket streaming + static UI mount.
+Run with: ghost-tokens serve (or uvicorn glassbox.server.app:app)
 Made with 🔮 by Vivi
 """
 import json
@@ -29,18 +29,18 @@ STATE = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load model once on server startup."""
-    print("🔮 GlassBox Server starting...")
+    print("Ghost Tokens server starting...")
     model_dir = Path(__file__).parent.parent.parent / "models" / "SmolLM2-135M"
-    print(f"📦 Loading model from {model_dir}...")
+    print(f"Loading model from {model_dir}...")
     STATE["model_dir"] = model_dir
     STATE["tokenizer"] = Tokenizer(model_dir)
     STATE["model"] = Transformer(model_dir)
-    print("✅ Model loaded! Server ready at http://localhost:8000")
+    print("Model loaded! Ghost Tokens is ready at http://localhost:8000")
     yield
-    print("👋 Server shutting down.")
+    print("Server shutting down.")
 
 
-app = FastAPI(title="GlassBox 🔮", lifespan=lifespan)
+app = FastAPI(title="Ghost Tokens 👻", lifespan=lifespan)
 
 
 # ─── WebSocket: Generation Stream ──────────────────────────────
@@ -57,6 +57,8 @@ async def ws_generate(ws: WebSocket):
         top_p = float(params.get("top_p", 0.9))
         use_cache = bool(params.get("use_cache", True))
         trace = bool(params.get("trace", True))
+        seed = int(params.get("seed", 1337))
+        np.random.seed(seed)
 
         model = STATE["model"]
         tok = STATE["tokenizer"]
@@ -111,7 +113,7 @@ async def ws_generate(ws: WebSocket):
     except WebSocketDisconnect:
         print("Client disconnected.")
     except Exception as e:
-        print(f"❌ Error during generation: {e}")
+        print(f"Error during generation: {e}")
         import traceback
         traceback.print_exc()
         try:
@@ -125,6 +127,10 @@ WEB_DIR = Path(__file__).parent.parent / "web"
 
 @app.get("/")
 async def root():
+    return FileResponse(WEB_DIR / "landing.html")
+
+@app.get("/dashboard")
+async def dashboard():
     return FileResponse(WEB_DIR / "index.html")
 
 # Mount everything else as static

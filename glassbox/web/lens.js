@@ -25,7 +25,12 @@ const Lens = (() => {
             const isFirstStableMatch = (idx === firstStableMatchIndex);
             const cls = isFirstStableMatch ? 'lens-cell lens-first-match' : 'lens-cell';
             
-            const cleanStr = vis(pred.token_str);
+            const displayToken = /^\s*(?:\r?\n|\r)\s*$/.test(pred.token_str)
+                ? 'newline'
+                : pred.token_str === ' '
+                    ? '␠'
+                    : pred.token_str;
+            const cleanStr = vis(displayToken);
             
             const pct = (pred.prob * 100).toFixed(1);
             const badge = isFirstStableMatch ? ' 🎯' : '';

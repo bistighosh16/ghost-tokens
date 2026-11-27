@@ -1,5 +1,5 @@
 """
-GlassBox Server Runner — Launch FastAPI backend and web visualizer.
+Ghost Tokens Server Runner — Launch FastAPI backend and web visualizer.
 Made with 🔮 by Vivi
 """
 import sys
@@ -13,9 +13,9 @@ if str(ROOT) not in sys.path:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  🔮 GlassBox Instrument Panel Visualizer")
+    print("  Ghost Tokens visualizer")
     print("  Serving at: http://localhost:8000")
-    print("  Made with 🔮 by Vivi")
+    print("  Built on GlassBox")
     print("=" * 60)
     print()
     
