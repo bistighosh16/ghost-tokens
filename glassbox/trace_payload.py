@@ -3,6 +3,7 @@ GlassBox Trace Payloads — Build compact JSON payloads for streaming to UI.
 Only sends what the browser needs; the browser does the heavy UI math.
 Made with 🔮 by Vivi
 """
+from glassbox.ghost import p_chosen_and_margin
 import numpy as np
 from dataclasses import dataclass, asdict
 
@@ -16,9 +17,12 @@ class StepPayload:
     tokens_per_sec: float
     cache_active: bool
     entropy_bits: float
+    p_chosen: float
+    margin: float
     # Top-N raw logits so client can re-softmax instantly on slider change
     top_logit_ids: list[int]               # Length N (e.g., 200)
     top_logit_values: list[float]
+    top_logit_strs: list[str]
     # Attention: only the NEW row per layer per head (new token vs all prev)
     # Shape: [num_layers][num_heads][total_seq_len]
     attention_new_rows: list[list[list[float]]] | None
@@ -54,12 +58,13 @@ def build_step_payload(
     top_values = logits[top_indices]
 
     # Model uncertainty over the full vocabulary at temperature 1, in bits
-    z = logits.astype(np.float64)
-    z -= z.max()
+    z = np.asarray(logits, dtype=np.float64)
+    z = z - z.max()
     p = np.exp(z)
     p /= p.sum()
     nz = p[p > 0]
     entropy_bits = float(-(nz * np.log2(nz)).sum())
+    p_chosen, margin = p_chosen_and_margin(logits, token_id)
 
     payload = {
         "step": step_idx,
@@ -68,6 +73,8 @@ def build_step_payload(
         "tokens_per_sec": float(tokens_per_sec),
         "cache_active": bool(cache_active),
         "entropy_bits": round(entropy_bits, 3),
+        "p_chosen": round(p_chosen, 6),
+        "margin": round(margin, 4),
         "top_logit_ids": [int(i) for i in top_indices],
         "top_logit_values": [float(v) for v in top_values],
         "top_logit_strs": [tokenizer.decode(int(i)) for i in top_indices],

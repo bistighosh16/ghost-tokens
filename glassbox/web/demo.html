@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost Tokens — Static demo</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .demo-shell { width: min(920px, calc(100% - 24px)); margin: 20px auto; }
+        .demo-intro { color: var(--text-dim); line-height: 1.6; }
+        .demo-examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+        .demo-prompt { padding: 8px; border: 1px solid var(--border-strong); border-radius: 6px; color: var(--text-dim); font: 13px/1.5 var(--font-mono); }
+        .demo-toolbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 10px; }
+        .demo-sensitivity { width: min(360px, 100%); color: var(--text-dim); }
+        .demo-sensitivity label { display: flex; justify-content: space-between; }
+        .demo-sensitivity input { display: block; width: 100%; margin-top: 6px; }
+        .demo-endpoints { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 11px; }
+        .demo-detail { margin-top: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 6px; }
+        .demo-error { color: #ff9a9a; }
+        .demo-status { color: var(--text-muted); font: 11px var(--font-mono); }
+        @media (max-width: 520px) { .demo-toolbar { flex-direction: column; } }
+    </style>
+</head>
+<body class="spooky-mode">
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark">◇</span>
+            <span class="brand-text">Ghost Tokens</span>
+            <span class="brand-sub">static demo</span>
+        </div>
+        <a class="brand-demo" href="https://github.com/bistighosh16/glassbox#readme">project README</a>
+    </header>
+    <main class="demo-shell">
+        <section class="panel panel-center">
+            <div class="panel-header flex-between">
+                <span>Saved séance · confidence, made visible</span>
+                <span id="demo-status" class="demo-status">loading trace…</span>
+            </div>
+            <p class="demo-intro">This is a saved model trace, so it works as a static page without a running model server. Choose a sample, adjust sensitivity, or select a token to inspect its signals.</p>
+            <div class="demo-examples">
+                <button class="btn-quiet" type="button" data-example="easy">easy fact</button>
+                <button class="btn-quiet" type="button" data-example="obscure">obscure fact</button>
+            </div>
+            <div id="demo-prompt" class="demo-prompt"></div>
+            <div id="demo-stream" class="token-stream" aria-label="Saved generated answer"></div>
+            <div class="demo-toolbar">
+                <span id="demo-haunt" class="badge-haunt" data-level="idle">haunt: —</span>
+                <div class="demo-sensitivity">
+                    <label for="demo-sensitivity">ghost sensitivity <span id="demo-sensitivity-value">50%</span></label>
+                    <div class="demo-endpoints"><span>fewer ghosts</span><span>more ghosts</span></div>
+                    <input type="range" id="demo-sensitivity" min="0" max="100" step="1" value="50">
+                    <div id="demo-rule" class="ghost-rule"></div>
+                </div>
+            </div>
+            <canvas id="demo-trail" class="confidence-trail" aria-label="Entropy confidence trail in bits. Click a point to select its token."></canvas>
+            <div class="demo-detail">
+                <div class="selected-word-header">
+                    <span>selected word <span id="demo-step" class="hint-inline">—</span></span>
+                    <span id="demo-token" class="selected-token">Select a word</span>
+                </div>
+                <input type="range" id="demo-step-slider" min="0" max="0" value="0" aria-label="Selected answer step">
+                <div class="selected-metrics">
+                    <div class="selected-metric"><span>raw confidence</span><b id="demo-confidence">—</b></div>
+                    <div class="selected-metric"><span>entropy</span><b id="demo-entropy">—</b></div>
+                    <div class="selected-metric"><span>top-two margin</span><b id="demo-margin">—</b></div>
+                </div>
+                <div class="alternatives-heading">top alternatives <span>(normalized within top 200 · ␠ = space · ↵ = newline)</span></div>
+                <div id="demo-alternatives" class="selected-alternatives"></div>
+            </div>
+        </section>
+        <p class="demo-intro">Built on GlassBox. Confidence is a risk signal, not a truth detector; token alternatives are not necessarily semantic alternatives.</p>
+    </main>
+    <script src="util.js"></script>
+    <script src="ghost-signals.js"></script>
+    <script src="./demo.js"></script>
+</body>
+</html>

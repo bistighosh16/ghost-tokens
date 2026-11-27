@@ -1,109 +1,61 @@
-# 🔮 GlassBox: See Inside the Model
+# 👻 Ghost Tokens: Meet the words the model almost chose
 
-**Made By 🔮 Vivi** A small language model rebuilt in pure NumPy, with a live visualizer for its internals.
+Watch uncertainty appear token by token. **Ghost Tokens** marks low-solidity choices, plots the confidence trail, and lets you replay or branch an answer to see what else the model might have said.
 
-GlassBox runs the open-weight **SmolLM2-135M** locally and shows what happens as it generates text: where it attends, which next tokens it considers, and how its predictions change across layers. There is no PyTorch runtime dependency; the inference code is designed to be small enough to read and explore.
+![Illustrative Ghost Tokens demo animation](docs/demo.gif)
 
-## ✨ Why GlassBox?
+**Built on GlassBox** — an inspectable, from-scratch NumPy inference engine.
 
-Many language-model demos hide the model behind an API. GlassBox takes the opposite approach: it pairs a real, open-weight model with an inspectable NumPy inference engine and a visual guide to its generation process. It is a learning tool, as well as a starting point for experiments with model internals.
+## What you can do
 
-## 🧭 Features
+- **Spot ghosts:** content tokens are ghosts only when both full-vocabulary entropy is high (4.5 bits at the default setting) and raw chosen-token confidence is low (below 15%). Whitespace- and punctuation-only tokens are excluded.
+- **Tune sensitivity live:** one slider adjusts both thresholds and re-flags the existing answer immediately. Haunt level is the percentage of countable answer tokens flagged.
+- **Inspect confidence:** select a token to see its full-vocabulary chosen probability, entropy, top-1/top-2 probability margin, and the leading alternatives from the top-200 logits.
+- **Follow the confidence trail:** the chart plots entropy in bits by token position. The dashed line follows the current entropy threshold; click any point to inspect that token.
+- **Replay a séance:** play or step through the answer and see the other leading candidates as faded ghost answers.
+- **Exorcise a ghost:** force its best other top-200 candidate and generate a continuation. The interface compares the original haunt level with the new branch suffix.
+- **Explore the model:** inspect attention, top-token probabilities, and the logit lens under the collapsed “Under the hood” section; click a probability bar to branch with any visible candidate.
+- **Choose the atmosphere:** spooky mode adds a restrained fog treatment and heading font; switch it off for a clean, plain interface.
 
-- **Attention heatmap:** inspect any layer and head, average across heads, normalize rows, or toggle the first-token attention sink. Hover a cell to inspect its query, key, and weight.
-- **Next-token probabilities:** explore a generation step's top 200 candidates and see which token the model selected.
-- **What-if branching:** click a probability bar to force that token and continue generation; return to the original prompt at any time.
-- **Token stream:** click a generated token to inspect its step. Surprise-colored chips show the model's confidence, while attention-weighted highlighting shows which earlier tokens received attention. Attention is not proof of why the model answered.
-- **Head gallery:** compare all attention heads in the selected layer.
-- **Logit lens:** follow the top prediction across all 30 transformer blocks.
-- **Sampling and speed controls:** adjust temperature, top-p, and top-k for the next run; compare KV-cache behavior and generation speed.
-- **Local visualizer:** a FastAPI server streams generation traces to a browser UI with no frontend build step.
+## Quick start
 
-## 🚀 Quick Start
-
-Requires Python 3.11 or later. Model weights are downloaded separately and need about 270 MB of disk space.
+Requires Python 3.11 or later. SmolLM2-135M weights download separately and use about 270 MB of disk space.
 
 ```powershell
 git clone https://github.com/bistighosh16/glassbox.git
 cd glassbox
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -e .
 python download_model.py
-python run_server.py
+ghost-tokens serve
 ```
 
-On macOS or Linux, activate the environment with `source venv/bin/activate`. Then open [http://localhost:8000](http://localhost:8000), launch GlassBox, enter a prompt, and select **generate**.
+Open [http://localhost:8000](http://localhost:8000). A saved trace loads immediately so you can explore an answer before the model runs. Choose the easy or obscure prompt (or enter your own) and press **generate** to run a live answer; live generation defaults to eight tokens. On macOS or Linux, activate the environment with `source venv/bin/activate`.
 
-The model weights are not stored in this repository. `download_model.py` fetches them from Hugging Face.
+The saved-trace-only page in [`glassbox/web/demo.html`](glassbox/web/demo.html) can be hosted on GitHub Pages or any static host. It uses the same trace data and ghost rule as the app and does not need the model server.
 
-## ☁️ Deploy the Streamlit Dashboard
+The model is [SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M) by Hugging Face; see its model card for licensing. The weights are not included in this repository.
 
-To publish the Streamlit dashboard with Streamlit Community Cloud:
+## Important limitations
 
-1. Push this repository to GitHub.
-2. In Streamlit Community Cloud, create an app from the repository and select `streamlit_app.py` as the **Main file path**.
-3. Deploy. Streamlit installs the packages from the root `requirements.txt`; the app downloads SmolLM2-135M on startup because model weights are excluded from Git.
+- **Confidence is a risk signal, not a truth detector.** A ghost flag means the model's distribution looks uncertain under the selected thresholds; it does not mean the generated claim is false. A confident token can still be wrong.
+- **Synonym caveat:** token-level alternatives are not semantic alternatives. A different token may be a synonym, a different spelling, or a token that only makes sense in a different continuation. The top-200 alternatives are local candidates, not a complete list of possible answers.
+- Raw confidence for the chosen token is computed over the full vocabulary. Probability bars are a temperature-scaled preview over the top 200 candidates; alternative percentages are normalized within that shortlist, not over the full vocabulary.
+- Attention visualizes weight allocation; it does not prove why the model produced an answer.
+- SmolLM2-135M is a small base model and can drift or repeat. Inference is CPU NumPy; GPU execution, batching, and quantization are not implemented.
 
-The model download and loading can take a few minutes on the first start. Although the weights occupy about 270 MB on disk, inference converts them to float32 and generation also needs working memory. Use a host with sufficient RAM; a small instance may restart or run out of memory while loading or generating. The dashboard runs on CPU, so generation may be slow.
+## Architecture and checks
 
-## 🏗️ Model and Architecture
-
-SmolLM2-135M has **30 layers**, a **576-wide hidden state**, **9 attention heads** with **3 key/value heads** (grouped-query attention), a **49,152-token vocabulary**, and about **134.5 million parameters**.
-
-```text
-Prompt -> Tokenizer -> Embeddings
-			 |
-		 30 transformer blocks
-		 RMSNorm, RoPE, GQA, SwiGLU
-			 |
-	     Final norm -> LM head -> logits
-				      |
-			  temperature / top-k / top-p
-				      |
-				  next token
-
-	      KV cache: keys and values between steps
-
-     attention and hidden-state traces -> FastAPI WebSocket
-				      -> browser visualizer
-```
-
-The loader reads the model weights, including conversion of stored bfloat16 values for NumPy. The tokenizer and ops modules prepare and process tokens; the model and generation modules run the forward pass and sampling. Trace data feeds the attention heatmap, probability bars, and logit lens.
-
-## 🧪 Verification
-
-The tests compare NumPy results with the Hugging Face/PyTorch reference implementation. On the checked cases, the forward-pass maximum logit difference is about `8.4e-5`, all 30 block hidden states have relative error below `1e-4`, and 25-token greedy generation matches. KV-cache checks compare cached and uncached decoding as well as reference logits.
-
-These checks cover specific prompts and cases, not a broad benchmark. To run them:
+Ghost Tokens streams generation and trace data from a local FastAPI server to a plain HTML/CSS/JavaScript client. The UI has no frontend build step. The model's forward pass, KV cache, attention, and logit-lens traces are provided by the GlassBox engine.
 
 ```powershell
 pip install -r requirements-dev.txt
 python -m pytest -q
-python -X utf8 tests/check_greedy_e2e.py
-python -X utf8 tests/check_lens_layers_vs_hf.py
 ```
 
-## ⚠️ Limitations
+The test suite checks numerical behavior and selected reference cases; those checks are not a broad benchmark.
 
-- SmolLM2-135M is a small base model; generated text can drift or repeat.
-- Browser probability bars use the top 200 candidates, not the full vocabulary.
-- Attention shows where weight was assigned; it does not explain the model's reasoning.
-- Inference uses CPU NumPy. GPU execution, batching, and quantization are not implemented.
+## Credits and license
 
-## 🗂️ Project Layout
-
-```text
-glassbox/    NumPy model, tokenizer, generation, tracing, and server
-glassbox/web/ Browser visualizer (HTML, CSS, and JavaScript)
-tests/       Numerical, cache, generation, and UI-payload checks
-docs/        Model and architecture notes
-```
-
-## 🎉 Built For
-
-Hacktoberfest X Hacktropica at Asansol Engineering College, an MLH community fest focused on open-source AI.
-
-## 🙏 Credits and License
-
-The model is [SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M) by Hugging Face (HuggingFaceTB); see its model card for model licensing. GlassBox code is available under the [MIT License](LICENSE).
+**Built on GlassBox** by Vivi, an open-source NumPy transformer inference and interpretability project. Ghost Tokens keeps the `glassbox` Python package as its engine. The code is available under the [MIT License](LICENSE); the model has its own license terms.

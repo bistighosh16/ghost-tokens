@@ -160,14 +160,14 @@ def load_all_weights(model_dir: str | Path) -> dict[str, np.ndarray]:
         
         # Find unique shard files
         shard_files = sorted(set(index["weight_map"].values()))
-        print(f"📦 Loading {len(shard_files)} weight shards...")
+        print(f"Loading {len(shard_files)} weight shards...")
         
         all_tensors = {}
         for shard in shard_files:
             shard_path = model_dir / shard
             tensors = load_safetensors(shard_path)
             all_tensors.update(tensors)
-            print(f"   ✅ {shard} ({len(tensors)} tensors)")
+            print(f"   Loaded {shard} ({len(tensors)} tensors)")
         
         return all_tensors
     else:
@@ -178,7 +178,7 @@ def load_all_weights(model_dir: str | Path) -> dict[str, np.ndarray]:
                 f"No model.safetensors found in {model_dir}. "
                 f"Did you run download_model.py?"
             )
-        print(f"📦 Loading weights from {safetensors_path.name}...")
+        print(f"Loading weights from {safetensors_path.name}...")
         tensors = load_safetensors(safetensors_path)
-        print(f"   ✅ {len(tensors)} tensors loaded")
+        print(f"   Loaded {len(tensors)} tensors")
         return tensors

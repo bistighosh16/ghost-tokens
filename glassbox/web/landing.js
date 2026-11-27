@@ -2,14 +2,14 @@
   const el = document.getElementById('landing');
   if (!el) return;
 
-  // After the first launch in this tab, skip the intro on refresh (handy while developing)
+  // After the first launch in this tab, skip the intro on refresh.
   let seen = false;
-  try { seen = sessionStorage.getItem('gb-intro-seen') === '1'; } catch (e) {}
+  try { seen = sessionStorage.getItem('gt-intro-seen') === '1'; } catch (e) {}
   if (seen) { el.remove(); return; }
 
   // Decorative causal-attention grid (purely visual, not real data)
   const grid = document.getElementById('lp-grid');
-  const N = 14, palette = ['#440154', '#3b528b', '#21908d', '#5ec962', '#fde725'];
+  const N = 14, palette = ['#25143c', '#53348a', '#9a69cf', '#54bc91', '#b5f3c8'];
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   for (let r = 0; r < N; r++) {
@@ -30,7 +30,7 @@
 
   function onKey(e) { if (e.key === 'Enter') launch(); }
   function launch() {
-    try { sessionStorage.setItem('gb-intro-seen', '1'); } catch (e) {}
+    try { sessionStorage.setItem('gt-intro-seen', '1'); } catch (e) {}
     document.removeEventListener('keydown', onKey);
     el.classList.add('lp-hide');
     setTimeout(() => { el.remove(); window.dispatchEvent(new Event('resize')); }, 500);

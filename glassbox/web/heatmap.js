@@ -9,9 +9,11 @@ const Heatmap = (() => {
     let stepsData = [];
     let promptTokens = [];
     let genTokens = [];
+    let lastRender = null;
+    let resizeFrame = null;
 
     function viridis(t) {
-        const stops = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+        const stops = [[41, 18, 63], [103, 58, 183], [176, 86, 200], [242, 123, 66], [255, 200, 87]];
         t = Math.max(0, Math.min(1, t));
         const idx = t * (stops.length - 1);
         const i0 = Math.floor(idx), i1 = Math.min(i0 + 1, stops.length - 1);
@@ -48,6 +50,7 @@ const Heatmap = (() => {
 
     function render(data, pTokens, gTokens, layerIdx, headIdx, avgHeads, rowNorm, hideSink) {
         stepsData = data; promptTokens = pTokens; genTokens = gTokens;
+        lastRender = [data, pTokens, gTokens, layerIdx, headIdx, avgHeads, rowNorm, hideSink];
         if (!stepsData || stepsData.length === 0) return;
 
         // Build raw matrix
@@ -99,20 +102,20 @@ const Heatmap = (() => {
         const totalRows = matrix.length;
         const totalCols = matrix[matrix.length - 1].length;
 
-        const parentW = canvas.parentElement.clientWidth;
-        const parentH = canvas.parentElement.clientHeight;
-
+        const wrapper = canvas.parentElement;
+        const styles = getComputedStyle(wrapper);
+        const horizontalSpace = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+        const verticalSpace = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom)
+            + parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth);
+        const parentW = Math.max(1, wrapper.clientWidth - horizontalSpace);
+        const marginLeft = 112;
+        const marginTop = 92;
+        const drawW = Math.max(1, parentW - marginLeft - 10);
+        const cellSize = Math.max(1, Math.min(46, drawW / totalCols));
+        const parentH = marginTop + totalRows * cellSize + 8;
+        wrapper.style.height = `${parentH + verticalSpace}px`;
         canvas.width = parentW;
         canvas.height = parentH;
-
-        const marginLeft = 65; // Left margin for row token labels
-        const marginTop = 50;  // Space for rotated column labels and sink marker
-
-        const drawW = parentW - marginLeft - 10;
-        const drawH = parentH - marginTop - 5;
-
-        const cellW = drawW / totalCols;
-        const cellH = drawH / totalRows;
 
         ctx.fillStyle = '#090a0f';
         ctx.fillRect(0, 0, parentW, parentH);
@@ -121,57 +124,62 @@ const Heatmap = (() => {
         for (let i = 0; i < totalRows; i++) {
             for (let j = 0; j < scaledMatrix[i].length; j++) {
                 ctx.fillStyle = viridis(scaledMatrix[i][j]);
-                ctx.fillRect(marginLeft + j * cellW, marginTop + i * cellH, cellW + 0.5, cellH + 0.5);
+                ctx.fillRect(marginLeft + j * cellSize, marginTop + i * cellSize, cellSize - 1, cellSize - 1);
             }
         }
 
+        ctx.strokeStyle = '#ff7a1a';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+            marginLeft + 1,
+            marginTop + (totalRows - 1) * cellSize + 1,
+            Math.max(0, totalCols * cellSize - 2),
+            Math.max(0, cellSize - 2)
+        );
+
         if (hideSink && totalCols > 0) {
             const sinkX = marginLeft;
+            const sinkWidth = cellSize;
             ctx.save();
             ctx.beginPath();
-            ctx.rect(sinkX, marginTop, cellW, drawH);
+            ctx.rect(sinkX, marginTop, sinkWidth, totalRows * cellSize);
             ctx.clip();
             ctx.fillStyle = '#292d35';
-            ctx.fillRect(sinkX, marginTop, cellW, drawH);
+            ctx.fillRect(sinkX, marginTop, sinkWidth, totalRows * cellSize);
             ctx.strokeStyle = '#737b88';
             ctx.lineWidth = 1;
-            for (let offset = -drawH; offset < cellW; offset += 8) {
+            for (let offset = -totalRows * cellSize; offset < sinkWidth; offset += 8) {
                 ctx.beginPath();
-                ctx.moveTo(sinkX + offset, marginTop + drawH);
-                ctx.lineTo(sinkX + offset + drawH, marginTop);
+                ctx.moveTo(sinkX + offset, marginTop + totalRows * cellSize);
+                ctx.lineTo(sinkX + offset + totalRows * cellSize, marginTop);
                 ctx.stroke();
             }
             ctx.restore();
         }
 
-        // Draw Axis Token Labels
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '10px JetBrains Mono';
-
-        // Column Labels (Top)
+        // Keep every column labeled; shorten labels only as cells get narrower.
+        ctx.fillStyle = '#b9a8d6';
+        const labelFontSize = Math.min(12, Math.max(8, cellSize * 0.26));
+        ctx.font = `${labelFontSize}px JetBrains Mono`;
         const allTokens = [...promptTokens, ...genTokens];
-        const colStep = Math.max(1, Math.ceil(totalCols / 16));
-        for (let j = 0; j < totalCols; j += colStep) {
-            const label = vis(allTokens[j] || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+        const maxLabelLength = Math.max(1, Math.min(8, Math.floor(cellSize * Math.SQRT2 / (labelFontSize * 0.6))));
+        for (let j = 0; j < totalCols; j++) {
+            const label = readableToken(allTokens[j] || '').slice(0, maxLabelLength);
             ctx.save();
-            ctx.translate(marginLeft + (j + 0.5) * cellW, marginTop - 7);
+            ctx.translate(marginLeft + (j + 0.5) * cellSize, marginTop - 8);
             ctx.rotate(-Math.PI / 4);
-            ctx.fillText(label.slice(0, 5), 0, 0);
+            ctx.textAlign = 'left';
+            ctx.fillText(label || '∅', 0, 0, 64);
             ctx.restore();
         }
-        if (hideSink) {
-            ctx.fillStyle = '#aab1bc';
-            ctx.font = '9px JetBrains Mono';
-            ctx.fillText('sink hidden', marginLeft, 12);
-        }
 
-        // Each attention row queries the previous token and predicts genTokens[i].
-        const rowStep = Math.max(1, Math.ceil(totalRows / 20));
+        // Each attention row predicts the generated token at the same step index.
+        const rowStep = Math.max(1, Math.ceil(18 / cellSize));
+        ctx.textAlign = 'right';
         for (let i = 0; i < totalRows; i += rowStep) {
-            const queryIndex = promptTokens.length + i - 1;
-            const queryToken = queryIndex >= 0 ? allTokens[queryIndex] || '' : '';
-            const cleanStr = vis(queryToken).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-            ctx.fillText(cleanStr.slice(0, 8), 4, marginTop + (i + 0.8) * cellH);
+            const predictedToken = genTokens[i] || '';
+            const rowLabel = readableToken(predictedToken).slice(0, 12);
+            ctx.fillText(rowLabel || '∅', marginLeft - 8, marginTop + (i + 0.72) * cellSize, marginLeft - 12);
         }
 
         // Hover Tooltip Logic
@@ -179,8 +187,8 @@ const Heatmap = (() => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left - marginLeft;
             const y = e.clientY - rect.top - marginTop;
-            const col = Math.floor(x / cellW);
-            const row = Math.floor(y / cellH);
+            const col = Math.floor(x / cellSize);
+            const row = Math.floor(y / cellSize);
 
             if (row >= 0 && row < matrix.length && col >= 0 && col < matrix[row].length) {
                 const layerRows = stepsData[row] && stepsData[row][layerIdx] ? stepsData[row][layerIdx] : [];
@@ -191,17 +199,28 @@ const Heatmap = (() => {
                 const rowMaxValues = hideSink ? selectedRow.slice(1) : selectedRow;
                 const rowMax = rowMaxValues.length ? Math.max(...rowMaxValues) : 0;
                 const percentOfMax = rowMax > 0 ? (rawVal / rowMax) * 100 : 0;
-                const queryIndex = promptTokens.length + row - 1;
-                const queryTok = queryIndex >= 0 ? allTokens[queryIndex] || '' : `step ${row}`;
                 const predictedTok = genTokens[row] || '';
                 const toTok = allTokens[col] || `col ${col}`;
-                const cleanQuery = vis(queryTok).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                const cleanPrediction = vis(predictedTok).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                const cleanKey = vis(toTok).replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                info.textContent = `Step ${row}: query '${cleanQuery}' predicts '${cleanPrediction}' → key ${col} '${cleanKey}'; raw ${rawVal.toFixed(4)}, ${percentOfMax.toFixed(1)}% of row max`;
+                const cleanPrediction = readableToken(predictedTok) || '∅';
+                const cleanKey = readableToken(toTok) || '∅';
+                info.textContent = `Row ${row + 1}/${totalRows}: wrote '${cleanPrediction}' and attended to earlier token ${col + 1}, '${cleanKey}'; raw ${rawVal.toFixed(4)}, ${percentOfMax.toFixed(1)}% of row max`;
             }
         };
     }
+
+    function readableToken(token) {
+        if (token === '\n' || token === '\r\n' || token === '\r') return 'newline';
+        if (token === ' ') return '␠';
+        return String(token).replace(/[\r\n\t]/g, '↵').trim();
+    }
+
+    window.addEventListener('resize', () => {
+        if (!lastRender || resizeFrame !== null) return;
+        resizeFrame = window.requestAnimationFrame(() => {
+            resizeFrame = null;
+            render(...lastRender);
+        });
+    });
 
     return { render, drawMini };
 })();
