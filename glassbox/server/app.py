@@ -7,7 +7,8 @@ import json
 import time
 from pathlib import Path
 import numpy as np
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
@@ -15,6 +16,7 @@ from contextlib import asynccontextmanager
 from glassbox.model import Transformer
 from glassbox.tokenizer import Tokenizer
 from glassbox.generate import generate_stream
+from glassbox.scan import scan_text
 from glassbox.trace_payload import build_step_payload
 
 
@@ -43,6 +45,22 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Ghost Tokens 👻", lifespan=lifespan)
 
 
+class ScanRequest(BaseModel):
+    text: str = Field(min_length=1)
+
+
+@app.post("/api/scan")
+def api_scan(request: ScanRequest):
+    model = STATE["model"]
+    tokenizer = STATE["tokenizer"]
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="The model is not loaded yet.")
+    try:
+        return scan_text(request.text, model, tokenizer)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
 # ─── WebSocket: Generation Stream ──────────────────────────────
 @app.websocket("/ws/generate")
 async def ws_generate(ws: WebSocket):
@@ -57,8 +75,6 @@ async def ws_generate(ws: WebSocket):
         top_p = float(params.get("top_p", 0.9))
         use_cache = bool(params.get("use_cache", True))
         trace = bool(params.get("trace", True))
-        seed = int(params.get("seed", 1337))
-        np.random.seed(seed)
 
         model = STATE["model"]
         tok = STATE["tokenizer"]
@@ -128,6 +144,7 @@ WEB_DIR = Path(__file__).parent.parent / "web"
 @app.get("/")
 async def root():
     return FileResponse(WEB_DIR / "landing.html")
+
 
 @app.get("/dashboard")
 async def dashboard():

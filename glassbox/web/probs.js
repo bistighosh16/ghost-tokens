@@ -86,7 +86,7 @@ const ProbBars = (() => {
         svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
         const labelW = 105;
-        const barAreaW = w - labelW - 86;
+        const barAreaW = w - labelW - 50;
 
         let html = '';
         top12.forEach((item, idx) => {

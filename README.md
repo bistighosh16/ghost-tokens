@@ -10,6 +10,7 @@ Watch uncertainty appear token by token. **Ghost Tokens** marks low-solidity cho
 
 - **Spot ghosts:** content tokens are ghosts only when both full-vocabulary entropy is high (4.5 bits at the default setting) and raw chosen-token confidence is low (below 15%). Whitespace- and punctuation-only tokens are excluded.
 - **Tune sensitivity live:** one slider adjusts both thresholds and re-flags the existing answer immediately. Haunt level is the percentage of countable answer tokens flagged.
+- **Haunt Scan:** paste text to score each token's surprise, entropy, margin, and three likely alternatives in one uncached pass. Scans are capped at 150 tokens; the shared sensitivity slider controls which low-probability tokens glow.
 - **Inspect confidence:** select a token to see its full-vocabulary chosen probability, entropy, top-1/top-2 probability margin, and the leading alternatives from the top-200 logits.
 - **Follow the confidence trail:** the chart plots entropy in bits by token position. The dashed line follows the current entropy threshold; click any point to inspect that token.
 - **Replay a séance:** play or step through the answer and see the other leading candidates as faded ghost answers.
@@ -28,10 +29,10 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -e .
 python download_model.py
-ghost-tokens serve
+python run_server.py
 ```
 
-Open [http://localhost:8000](http://localhost:8000). A saved trace loads immediately so you can explore an answer before the model runs. Choose the easy or obscure prompt (or enter your own) and press **generate** to run a live answer; live generation defaults to eight tokens. On macOS or Linux, activate the environment with `source venv/bin/activate`.
+Open [http://localhost:8000](http://localhost:8000) for the landing page, then choose **Try it** to open the dashboard. You can also go directly to [http://localhost:8000/dashboard](http://localhost:8000/dashboard). A saved trace loads immediately so you can explore an answer before the model runs. Choose the easy or obscure prompt (or enter your own) and press **generate** to run a live answer; live generation defaults to eight tokens. If port 8000 is occupied, run `python run_server.py --port 8001`. On macOS or Linux, activate the environment with `source venv/bin/activate`.
 
 The saved-trace-only page in [`glassbox/web/demo.html`](glassbox/web/demo.html) can be hosted on GitHub Pages or any static host. It uses the same trace data and ghost rule as the app and does not need the model server.
 
@@ -40,6 +41,7 @@ The model is [SmolLM2-135M](https://huggingface.co/HuggingFaceTB/SmolLM2-135M) b
 ## Important limitations
 
 - **Confidence is a risk signal, not a truth detector.** A ghost flag means the model's distribution looks uncertain under the selected thresholds; it does not mean the generated claim is false. A confident token can still be wrong.
+- **Haunt Scan shows which words a small 135M-parameter model found unexpected. Unexpected does not mean false, and an expected word can still be wrong.**
 - **Synonym caveat:** token-level alternatives are not semantic alternatives. A different token may be a synonym, a different spelling, or a token that only makes sense in a different continuation. The top-200 alternatives are local candidates, not a complete list of possible answers.
 - Raw confidence for the chosen token is computed over the full vocabulary. Probability bars are a temperature-scaled preview over the top 200 candidates; alternative percentages are normalized within that shortlist, not over the full vocabulary.
 - Attention visualizes weight allocation; it does not prove why the model produced an answer.
