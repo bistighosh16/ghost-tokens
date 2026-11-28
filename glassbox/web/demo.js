@@ -223,7 +223,7 @@
     window.addEventListener('resize', renderTrail);
 
     updateRule();
-    fetch('demo-trace.json?v=2')
+    fetch('demo-trace.json')
         .then(response => {
             if (!response.ok) throw new Error(`Trace request failed (${response.status}).`);
             return response.json();

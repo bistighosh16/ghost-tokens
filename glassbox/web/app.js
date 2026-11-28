@@ -43,6 +43,15 @@
     const headGallery = document.getElementById('head-gallery');
     const headGalleryGrid = document.getElementById('head-gallery-grid');
     const headGalleryLayer = document.getElementById('head-gallery-layer');
+    const scanInput = document.getElementById('scan-text');
+    const scanButton = document.getElementById('scan-button');
+    const scanStatus = document.getElementById('scan-status');
+    const scanResults = document.getElementById('scan-results');
+    const scanHauntLevel = document.getElementById('scan-haunt-level');
+    const scanHauntCount = document.getElementById('scan-haunt-count');
+    const scanMeter = document.getElementById('scan-meter');
+    const scanMeterFill = document.getElementById('scan-meter-fill');
+    const scanRule = document.getElementById('scan-rule');
 
     let steps = [];
     let config = null;
@@ -59,6 +68,8 @@
     let generationActive = false;
     let branchComparison = null;
     let demoExamples = null;
+    let scanTokens = null;
+    let scanWasTrimmed = false;
 
     function ghostThresholds() {
         return GhostSignals.thresholdsForSensitivity(ghostThreshold.value);
@@ -101,33 +112,20 @@
 
     function updateHauntBadge() {
         if (!steps.length) {
-            hauntBadge.textContent = '';
+            hauntBadge.textContent = 'haunt: —';
             hauntBadge.dataset.level = 'idle';
-            const fill = document.getElementById('haunt-meter-fill');
-            if (fill) fill.style.width = '0%';
-            const value = document.getElementById('haunt-meter-value');
-            if (value) value.textContent = '—';
-            const tier = document.getElementById('haunt-tier');
-            if (tier) tier.textContent = 'Calm';
             return;
         }
         const countable = steps.filter(step => GhostSignals.isCountableToken(step.token_str));
         if (!countable.length) {
-            hauntBadge.textContent = '';
+            hauntBadge.textContent = 'haunt: — · 0 content tokens';
             hauntBadge.dataset.level = 'idle';
             return;
         }
         const ghostCount = countable.filter(isGhost).length;
         const percent = hauntPercent(steps);
-        hauntBadge.textContent = '';
+        hauntBadge.textContent = `haunt: ${percent}% · ${ghostCount}/${countable.length} content tokens`;
         hauntBadge.dataset.level = percent < 30 ? 'low' : percent < 60 ? 'medium' : 'high';
-        const tier = percent < 30 ? 'Calm' : percent < 60 ? 'Restless' : 'Haunted';
-        const fill = document.getElementById('haunt-meter-fill');
-        if (fill) fill.style.width = `${percent}%`;
-        const value = document.getElementById('haunt-meter-value');
-        if (value) value.textContent = `${percent}% · ${ghostCount} of ${countable.length} words`;
-        const tierNode = document.getElementById('haunt-tier');
-        if (tierNode) tierNode.textContent = tier;
     }
 
     function getAlternatives(step, limit = 5) {
@@ -168,6 +166,91 @@
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+    }
+
+    function scanTooltip(token) {
+        const alternatives = (token.alternatives || [])
+            .map(item => `  ${String(item.token_str || '').replace(/\s+/g, ' ') || '∅'} (${(Number(item.probability) * 100).toFixed(2)}%)`);
+        return [
+            `Surprise: ${Number(token.surprise_bits).toFixed(3)} bits`,
+            `Probability of this token: ${(Number(token.p_chosen) * 100).toFixed(4)}%`,
+            `Entropy: ${Number(token.entropy_bits).toFixed(3)} bits`,
+            `Top-two margin: ${(Number(token.margin) * 100).toFixed(3)} percentage points`,
+            'Most likely alternatives:',
+            ...(alternatives.length ? alternatives : ['  none available']),
+        ].join('\n');
+    }
+
+    function renderScanResults() {
+        const sensitivity = ghostThreshold.value;
+        const threshold = HauntScan.thresholdForSensitivity(sensitivity);
+        scanRule.textContent = `Scan rule: surprise ≥ ${threshold.toFixed(1)} bits.`;
+        if (!scanTokens) {
+            scanResults.innerHTML = '<span class="scan-empty"><span aria-hidden="true">👻</span> Paste text and scan it to see token-level surprise.</span>';
+            scanHauntLevel.textContent = 'No scan yet';
+            scanHauntCount.textContent = '0 of 0 content tokens';
+            scanMeter.setAttribute('aria-valuenow', '0');
+            scanMeter.dataset.level = 'idle';
+            scanMeterFill.style.width = '0%';
+            return;
+        }
+
+        const countable = scanTokens.filter(token => GhostSignals.isCountableToken(token.token_str));
+        const ghostCount = countable.filter(token => HauntScan.isGhost(token, sensitivity)).length;
+        const percent = HauntScan.hauntPercent(scanTokens, sensitivity);
+        scanHauntLevel.textContent = `${percent}% haunted`;
+        scanHauntCount.textContent = `${ghostCount} of ${countable.length} content tokens`;
+        scanMeter.setAttribute('aria-valuenow', String(percent));
+        scanMeter.dataset.level = percent < 30 ? 'low' : percent < 60 ? 'medium' : 'high';
+        scanMeterFill.style.width = `${percent}%`;
+        scanResults.innerHTML = scanTokens.map(token => {
+            const ghost = HauntScan.isGhost(token, sensitivity);
+            const details = escapeAttr(scanTooltip(token));
+            const tokenText = vis(token.token_str || '');
+            return `<span class="chip chip-gen ${ghost ? 'chip-ghost' : 'chip-solid'}" title="${details}" aria-label="${details}" tabindex="0" role="img">${tokenText}</span>`;
+        }).join('');
+    }
+
+    async function runHauntScan() {
+        const text = scanInput.value;
+        if (!text.trim()) {
+            scanTokens = null;
+            delete scanStatus.dataset.state;
+            scanStatus.textContent = 'Paste some text before scanning.';
+            renderScanResults();
+            return;
+        }
+
+        scanTokens = null;
+        scanWasTrimmed = false;
+        delete scanStatus.dataset.state;
+        scanButton.disabled = true;
+        scanStatus.textContent = 'Scanning with one model pass…';
+        renderScanResults();
+        try {
+            const response = await fetch('/api/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.detail || `Scan failed (${response.status}).`);
+            }
+            scanTokens = payload.tokens;
+            scanWasTrimmed = payload.trimmed;
+            renderScanResults();
+            delete scanStatus.dataset.state;
+            scanStatus.textContent = scanWasTrimmed
+                ? `Text trimmed to the first ${payload.max_tokens} tokens.`
+                : `Scanned ${payload.token_count} tokens.`;
+        } catch (error) {
+            console.error('Haunt Scan failed:', error);
+            scanStatus.textContent = error.message || 'Haunt Scan failed. Please try again.';
+            scanStatus.dataset.state = 'error';
+        } finally {
+            scanButton.disabled = false;
+        }
     }
 
     function renderConfidenceTrail() {
@@ -472,7 +555,6 @@
                 top_p: parseFloat(document.getElementById('topp-slider').value),
                 use_cache: useCacheInput.checked,
                 trace: true,
-                seed: 1337,
             }));
         };
 
@@ -628,7 +710,16 @@
         ghostThresholdValue.textContent = `${Number(ghostThreshold.value)}%`;
         ghostRule.textContent = `Ghost rule: H ≥ ${thresholds.entropy.toFixed(1)} bits AND raw P < ${(thresholds.probability * 100).toFixed(1)}%.`;
         renderTokenStream(selectedStepIdx);
+        renderScanResults();
         if (selectedStepIdx >= 0) selectStep(selectedStepIdx);
+    });
+
+    scanButton.addEventListener('click', runHauntScan);
+    document.querySelectorAll('[data-scan-preset]').forEach(button => {
+        button.addEventListener('click', () => {
+            scanInput.value = HauntScan.presets[button.dataset.scanPreset];
+            runHauntScan();
+        });
     });
 
     confidenceTrail.addEventListener('click', event => {
@@ -703,7 +794,7 @@
     }
 
     async function loadDemoTrace() {
-        const response = await fetch('/static/demo-trace.json?v=2');
+        const response = await fetch('/static/demo-trace.json');
         if (!response.ok) throw new Error(`Could not load saved example (${response.status}).`);
         const trace = await response.json();
         if (trace.version !== 1 || !trace.examples || !trace.examples[trace.default]) {

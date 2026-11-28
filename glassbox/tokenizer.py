@@ -20,7 +20,7 @@ class Tokenizer:
     
     def encode(self, text: str, add_special_tokens: bool = True) -> list[int]:
         """Encode a string into a list of token IDs."""
-        encoding = self.tokenizer.encode(text)
+        encoding = self.tokenizer.encode(text, add_special_tokens=add_special_tokens)
         tokens = encoding.ids
         return tokens
     

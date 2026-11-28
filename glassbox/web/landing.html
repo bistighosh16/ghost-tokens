@@ -2,127 +2,186 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#140a22">
+    <meta name="description" content="See which words a small language model found uncertain with Ghost Tokens and Haunt Scan.">
     <title>Ghost Tokens — See what your AI isn't sure about</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/landing-page.css">
 </head>
-<body class="spooky-mode landing-page">
-    <header class="landing-nav">
-        <a class="landing-brand" href="/" aria-label="Ghost Tokens home">
-            <svg class="mini-ghost" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C17 6 10 17 10 32v20l8-6 7 7 7-7 7 7 7-7 8 6V32C54 17 47 6 32 6Z"/><circle cx="24" cy="29" r="3"/><circle cx="40" cy="29" r="3"/><path d="M26 39c4 3 8 3 12 0"/></svg>
+<body class="landing-page spooky-on">
+    <svg class="svg-defs" aria-hidden="true" focusable="false">
+        <symbol id="friendly-ghost" viewBox="0 0 160 180">
+            <path d="M22 84C22 45 48 18 81 18s58 27 58 66v72l-20-13-19 14-19-14-20 14-19-14-20 13V84Z" fill="#f3ecff"/>
+            <ellipse cx="62" cy="79" rx="7" ry="10" fill="#2a1745"/>
+            <ellipse cx="101" cy="79" rx="7" ry="10" fill="#2a1745"/>
+            <path d="M72 104c5 7 13 7 18 0" fill="none" stroke="#2a1745" stroke-linecap="round" stroke-width="5"/>
+            <circle cx="43" cy="96" r="7" fill="#ffb38a" opacity=".8"/>
+            <circle cx="119" cy="96" r="7" fill="#ffb38a" opacity=".8"/>
+        </symbol>
+    </svg>
+
+    <header class="site-header">
+        <a class="wordmark" href="/" aria-label="Ghost Tokens home">
+            <svg class="wordmark-ghost" aria-hidden="true"><use href="#friendly-ghost"></use></svg>
             <span>Ghost Tokens</span>
         </a>
-        <a class="btn btn-quiet-link" href="/dashboard">Open dashboard</a>
+        <nav class="header-nav" aria-label="Main navigation">
+            <a href="#how-to">How it works</a>
+            <a href="#about">About</a>
+            <a class="nav-cta" href="/dashboard">Open dashboard <span aria-hidden="true">→</span></a>
+        </nav>
     </header>
 
     <main>
         <section class="hero" aria-labelledby="hero-title">
             <div class="hero-copy">
-                <p class="kicker">Confidence, made visible</p>
+                <p class="eyebrow">A little more honesty from AI</p>
                 <h1 id="hero-title">See exactly which words your AI is making up.</h1>
-                <p class="hero-lede">Spot uncertainty before it becomes misinformation. Ghost Tokens shows where a model had several plausible choices.</p>
+                <p class="hero-summary">Ghost Tokens makes a language model's uncertainty visible, one word at a time. Try a saved example or scan text you already have.</p>
+                <div class="hero-demo" aria-label="Example sentence with an uncertain word highlighted">
+                    <span class="demo-label">A tiny preview</span>
+                    <p>The <span class="demo-ghost">capital</span> of France is <span class="demo-ghost ghost-word-delayed">Paris</span>.</p>
+                    <span class="demo-caption">Ghost words glow green as a risk signal, not proof of an error.</span>
+                </div>
                 <div class="hero-actions">
-                    <a class="btn btn-primary-link" href="/dashboard">Try it</a>
-                    <a class="btn btn-secondary-link" href="#how-to-use">Watch the demo</a>
+                    <a class="button button-primary" href="/dashboard">Try it <span aria-hidden="true">→</span></a>
+                    <a class="button button-secondary" href="#how-to">Watch the demo <span aria-hidden="true">↓</span></a>
                 </div>
             </div>
-            <div class="hero-demo" aria-label="Live miniature Ghost Tokens example">
-                <div class="mini-answer">
-                    <span>Did the</span>
-                    <span class="mini-chip">curious</span>
-                    <span>path lead to</span>
-                    <span class="mini-chip ghost-mini">Paris</span>
-                    <span>or</span>
-                    <span class="mini-chip ghost-mini alt">Rome</span>
-                    <span>?</span>
-                </div>
-                <div class="hero-mascot" aria-hidden="true">
-                    <svg viewBox="0 0 180 180"><path d="M90 18c-42 0-65 31-65 72v55l18-17 20 20 27-24 27 24 20-20 18 17v-55c0-41-23-72-65-72Z"/><ellipse cx="69" cy="86" rx="8" rx="11"/><ellipse cx="111" cy="86" rx="8" rx="11"/><path d="M76 111c9 8 19 8 28 0"/></svg>
-                </div>
+            <div class="hero-art" aria-hidden="true">
+                <span class="orb orb-one"></span><span class="orb orb-two"></span>
+                <svg class="hero-ghost"><use href="#friendly-ghost"></use></svg>
+                <span class="ghost-spark spark-one">✦</span><span class="ghost-spark spark-two">✧</span>
             </div>
         </section>
 
         <section class="problem-strip" aria-label="The problem">
-            <div><span class="problem-icon">Aa</span><b>Sounds sure.</b></div>
-            <div><span class="problem-icon">?</span><b>Might be guessing.</b></div>
-            <div><span class="problem-icon">◎</span><b>You can't tell which words.</b></div>
+            <div><span class="strip-icon" aria-hidden="true">◌</span><span>Sounds sure.</span></div>
+            <div><span class="strip-icon" aria-hidden="true">?</span><span>Might be guessing.</span></div>
+            <div><span class="strip-icon" aria-hidden="true">◉</span><span>You can't tell which words.</span></div>
         </section>
 
-        <section class="orientation" aria-labelledby="orientation-title">
-            <h2 id="orientation-title" class="sr-only">How it works</h2>
-            <div><span>1</span><b>Prompt</b></div><i></i>
-            <div><span>2</span><b>Ghosts</b></div><i></i>
-            <div><span>3</span><b>Inspect</b></div>
+        <section class="three-steps" aria-label="How Ghost Tokens works">
+            <span class="three-step"><b>01</b> Prompt</span>
+            <span class="step-line" aria-hidden="true"></span>
+            <span class="three-step"><b>02</b> Find the ghosts</span>
+            <span class="step-line" aria-hidden="true"></span>
+            <span class="three-step"><b>03</b> Inspect</span>
         </section>
 
-        <section id="how-to-use" class="how-to-use" aria-labelledby="how-title">
-            <div class="section-heading"><p class="kicker">How to use</p><h2 id="how-title">A séance in eight steps</h2></div>
-            <div class="scroll-cards">
-                <article class="scroll-card" data-step="1">
-                    <aside class="card-step"><span>01</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Ask anything</h3><p>Type a prompt or pick a preset.</p></div>
-                    <div class="card-mock mock-prompt"><div class="mock-label">Prompt</div><div class="mock-input"><span class="typed-text">The capital of France is</span><b class="typing-caret"></b></div></div>
-                </article>
-                <article class="scroll-card" data-step="2">
-                    <aside class="card-step"><span>02</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Watch it write</h3><p>Words appear one at a time, just like the model produces them.</p></div>
-                    <div class="card-mock mock-writing"><span>Paris</span><span>.</span><span>\n</span><span>It</span><span>is</span></div>
-                </article>
-                <article class="scroll-card" data-step="3">
-                    <aside class="card-step"><span>03</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Spot the ghosts</h3><p>Words the model was unsure about glow green.</p></div>
-                    <div class="card-mock mock-ghosts"><span>The</span><span class="demo-ghost">French</span><span class="demo-ghost">language</span><span>is</span></div>
-                </article>
-                <article class="scroll-card" data-step="4">
-                    <aside class="card-step"><span>04</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Tune the sensitivity</h3><p>Slide to see more or fewer ghosts.</p></div>
-                    <div class="card-mock mock-slider"><div class="mock-haunt"><span>Haunt level</span><b>38% · Restless</b></div><input aria-label="Sensitivity demo" type="range" value="38"></div>
-                </article>
-                <article class="scroll-card" data-step="5">
-                    <aside class="card-step"><span>05</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Click any word</h3><p>See its confidence, entropy and the words it almost said.</p></div>
-                    <div class="card-mock mock-details"><span class="selected-demo-chip">French</span><div><b>7.8%</b><small>confidence</small><b>9.34</b><small>bits</small></div></div>
-                </article>
-                <article class="scroll-card" data-step="6">
-                    <aside class="card-step"><span>06</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Séance replay</h3><p>Step through the answer and see the paths not taken.</p></div>
-                    <div class="card-mock mock-replay"><span>The</span><span class="chosen">French</span><div><i>capital</i><i>population</i><i>language</i></div></div>
-                </article>
-                <article class="scroll-card" data-step="7">
-                    <aside class="card-step"><span>07</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Exorcise a ghost</h3><p>Regenerate from a shaky word and compare.</p></div>
-                    <div class="card-mock mock-exorcise"><span class="old-ghost">French</span><span class="arrow">→</span><span class="new-word">official</span><small>Haunt 38% → 22%</small></div>
-                </article>
-                <article class="scroll-card" data-step="8">
-                    <aside class="card-step"><span>08</span><div class="step-progress"></div></aside>
-                    <div class="card-copy"><h3>Look under the hood</h3><p>See attention and layer-by-layer guesses.</p></div>
-                    <div class="card-mock mock-heatmap" aria-label="Animated attention heatmap"><div class="heatmap-grid"></div></div>
-                </article>
+        <section id="how-to" class="how-to-section" aria-labelledby="how-to-title">
+            <div class="section-heading">
+                <p class="eyebrow">A quick tour</p>
+                <h2 id="how-to-title">How to use Ghost Tokens</h2>
+                <p>Scroll through the real ideas behind the dashboard. Each little preview animates as it comes into view.</p>
+            </div>
+            <div class="tour-layout">
+                <nav class="tour-progress" aria-label="How-to steps">
+                    <a href="#tour-1" aria-label="Step 1: Ask anything" aria-current="step">01</a>
+                    <a href="#tour-2" aria-label="Step 2: Watch it write">02</a>
+                    <a href="#tour-3" aria-label="Step 3: Spot the ghosts">03</a>
+                    <a href="#tour-4" aria-label="Step 4: Tune sensitivity">04</a>
+                    <a href="#tour-5" aria-label="Step 5: Click any word">05</a>
+                    <a href="#tour-6" aria-label="Step 6: Séance replay">06</a>
+                    <a href="#tour-7" aria-label="Step 7: Exorcise a ghost">07</a>
+                    <a href="#tour-8" aria-label="Step 8: Look under the hood">08</a>
+                </nav>
+                <div class="tour-cards">
+                    <article id="tour-1" class="tour-card" data-tour-step="1">
+                        <div class="tour-copy"><span class="step-number">01</span><h3>Ask anything</h3><p>Type a prompt or pick a preset to get started.</p></div>
+                        <div class="mock mock-prompt" aria-hidden="true">
+                            <span class="mock-label">your prompt</span>
+                            <div class="typed-prompt">Why do some stars look brighter than others?</div>
+                            <span class="mock-cursor"></span>
+                        </div>
+                    </article>
+                    <article id="tour-2" class="tour-card" data-tour-step="2">
+                        <div class="tour-copy"><span class="step-number">02</span><h3>Watch it write</h3><p>Words appear in the order the model produces them.</p></div>
+                        <div class="mock mock-tokens" aria-hidden="true">
+                            <span class="mock-label">token stream</span>
+                            <div class="token-row"><span>Some</span><span>stars</span><span>are</span><span>closer</span><span>than</span><span>others.</span></div>
+                        </div>
+                    </article>
+                    <article id="tour-3" class="tour-card" data-tour-step="3">
+                        <div class="tour-copy"><span class="step-number">03</span><h3>Spot the ghosts</h3><p>Surprising words glow green so you can see where to look closer.</p></div>
+                        <div class="mock mock-tokens mock-ghosts" aria-hidden="true">
+                            <span class="mock-label">answer · 2 ghost signals</span>
+                            <div class="token-row"><span>Some</span><span class="ghost-token">stars</span><span>are</span><span class="ghost-token">closer</span><span>than</span><span>others.</span></div>
+                        </div>
+                    </article>
+                    <article id="tour-4" class="tour-card" data-tour-step="4">
+                        <div class="tour-copy"><span class="step-number">04</span><h3>Tune the sensitivity</h3><p>Move one slider to flag fewer or more low-confidence words.</p></div>
+                        <div class="mock mock-sensitivity" aria-hidden="true">
+                            <div class="mock-meter-title"><span>ghost sensitivity</span><b>68%</b></div>
+                            <div class="mock-slider"><span></span><i></i></div>
+                            <div class="mock-haunt"><span>haunt level</span><b>Restless · 3 of 8 words</b></div>
+                        </div>
+                    </article>
+                    <article id="tour-5" class="tour-card" data-tour-step="5">
+                        <div class="tour-copy"><span class="step-number">05</span><h3>Click any word</h3><p>Inspect its confidence, entropy, margin, and the alternatives it considered.</p></div>
+                        <div class="mock mock-inspect" aria-hidden="true">
+                            <span class="ghost-token selected-token">closer</span>
+                            <div class="mock-detail"><b>selected word · closer</b><span>confidence <strong>8.2%</strong></span><span>entropy <strong>7.4 bits</strong></span><span>also considered <strong>larger · nearer · brighter</strong></span></div>
+                        </div>
+                    </article>
+                    <article id="tour-6" class="tour-card" data-tour-step="6">
+                        <div class="tour-copy"><span class="step-number">06</span><h3>Séance replay</h3><p>Step through the answer and see the paths the model could have taken.</p></div>
+                        <div class="mock mock-replay" aria-hidden="true">
+                            <div class="token-row"><span>stars</span><span class="ghost-token">closer</span><span>appear</span></div>
+                            <div class="alternative-words"><span>nearer</span><span>larger</span><span>brighter</span></div>
+                            <span class="mock-replay-button">Ⅱ &nbsp; séance replay</span>
+                        </div>
+                    </article>
+                    <article id="tour-7" class="tour-card" data-tour-step="7">
+                        <div class="tour-copy"><span class="step-number">07</span><h3>Exorcise a ghost</h3><p>Try a strong alternative and compare how the answer's haunt level changes.</p></div>
+                        <div class="mock mock-exorcise" aria-hidden="true">
+                            <div class="before-after"><span>before <b>38% haunted</b></span><span>after <b>25% haunted</b></span></div>
+                            <div class="token-row"><span>stars</span><span class="ghost-token dissolving">closer</span><span class="replacement">nearer</span><span>appear</span></div>
+                        </div>
+                    </article>
+                    <article id="tour-8" class="tour-card" data-tour-step="8">
+                        <div class="tour-copy"><span class="step-number">08</span><h3>Look under the hood</h3><p>Explore attention and layer-by-layer guesses in the NumPy model.</p></div>
+                        <div class="mock mock-heatmap" aria-hidden="true">
+                            <span class="mock-label">attention matrix</span>
+                            <div class="heatmap-grid">
+                                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                            </div>
+                            <span class="heatmap-caption">where it looked · not proof of why</span>
+                        </div>
+                    </article>
+                </div>
             </div>
         </section>
 
-        <section class="trust-box">
-            <svg class="trust-ghost" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C17 6 10 17 10 32v20l8-6 7 7 7-7 7 7 7-7 8 6V32C54 17 47 6 32 6Z"/><circle cx="24" cy="29" r="3"/><circle cx="40" cy="29" r="3"/></svg>
-            <div><h2>Honest by design</h2><p>A ghost means the model had several plausible choices. It's a risk signal, not proof of an error.</p></div>
+        <section class="honesty-section">
+            <svg class="honesty-ghost" aria-hidden="true"><use href="#friendly-ghost"></use></svg>
+            <div><p class="eyebrow">A useful signal, not a verdict</p><h2>Ghosts aren't proof of errors.</h2><p>A ghost means the model had several plausible choices. It's a risk signal, not proof of an error. And an expected word can still be wrong.</p></div>
         </section>
 
-        <section class="underhood-credit">
-            <p class="kicker">Under the hood</p>
-            <h2>Built on GlassBox, a from-scratch NumPy inference engine.</h2>
-            <div class="badges"><span>NumPy</span><span>FastAPI</span><span>WebSocket</span><span>No PyTorch</span></div>
-        </section>
-
-        <section class="install">
-            <div><p class="kicker">Install</p><h2>Bring the séance to your machine.</h2></div>
-            <div class="install-box"><code id="pip-command">pip install ghost-tokens</code><button id="copy-command" type="button">Copy</button></div>
-            <a href="https://github.com/bistighosh16/glassbox" target="_blank" rel="noreferrer">View the repository ↗</a>
+        <section id="about" class="about-section">
+            <div class="about-copy">
+                <p class="eyebrow">Under the hood</p>
+                <h2>Small model. Open workings.</h2>
+                <p>Built on GlassBox, a from-scratch NumPy inference engine. Inspect what the model considered without sending your text to a hosted AI service.</p>
+                <div class="tech-badges" aria-label="Technology stack"><span>NumPy</span><span>FastAPI</span><span>WebSocket</span><span>No PyTorch runtime</span></div>
+            </div>
+            <div class="install-card">
+                <span class="mock-label">run it locally</span>
+                <div class="install-command"><code id="install-command">pip install -e .</code><button id="copy-install" type="button" aria-label="Copy install command">Copy</button></div>
+                <span id="copy-status" class="copy-status" role="status" aria-live="polite"></span>
+                <a class="repo-link" href="https://github.com/bistighosh16/glassbox" target="_blank" rel="noreferrer">Explore the source on GitHub <span aria-hidden="true">↗</span></a>
+            </div>
         </section>
     </main>
 
-    <footer class="landing-footer">
-        <div><b>Made by Vivi</b><a href="https://github.com/bistighosh16/glassbox" target="_blank" rel="noreferrer">GlassBox repository</a></div>
-        <label class="toggle spooky-toggle"><input type="checkbox" id="landing-spooky" checked><span>Spooky mode</span></label>
+    <footer class="site-footer">
+        <a class="footer-brand" href="/">
+            <svg class="footer-ghost" aria-hidden="true"><use href="#friendly-ghost"></use></svg>
+            <span>Made by Vivi · Built on GlassBox</span>
+        </a>
+        <a href="https://github.com/bistighosh16/glassbox" target="_blank" rel="noreferrer">Repository</a>
+        <label class="spooky-control"><input id="spooky-mode" type="checkbox" checked><span class="toggle-track" aria-hidden="true"></span><span>Spooky mode</span></label>
     </footer>
-    <script src="/static/landing.js"></script>
+    <script src="/static/landing-page.js"></script>
 </body>
 </html>
